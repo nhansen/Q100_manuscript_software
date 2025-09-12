@@ -1,0 +1,13 @@
+Read alignment for "A complete diploid human genome benchmark for
+personalized genomics"
+
+Unless otherwise noted in the supplement of the Q100 manuscript, 
+the scripts in the winnowmap and bwa directories of the T2T-Polish
+subdirectory were used to align short and long reads for this 
+project, respectively. The current version of the T2T-Polish 
+software is available at https://github.com/arangrhie/T2T-Polish.
+
+Mc Cartney AM, Shafin K, Alonge M et al. Chasing perfection:
+validation and polishing strategies for telomere-to-telomere
+genome assemblies. Nat Methods (2022)
+doi: https://doi.org/10.1038/s41592-022-01440-3

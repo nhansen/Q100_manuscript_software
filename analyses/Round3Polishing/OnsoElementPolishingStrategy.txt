@@ -1,0 +1,19 @@
+###identifying errors with element trio data
+#requires trio reads aligned separately to mat+Y and pat+X+MT, and then called with deeptrio on each haplotype and merged with glnexus 
+
+#first, phase deeptrio calls
+rtg-tools-3.12.1/rtg mendelian -t hg002v1.0.sdf -i HG002-HG003-HG004.hg001v1.0_mat_Y_EBV.element_500bp.deeptrio_1.6.glnexus.vcf.gz  --pedigree HG234.ped.txt --output-consistent HG002-HG003-HG004.hg001v1.0_mat_Y_EBV.element_500bp.deeptrio_1.6.glnexus_phased.vcf.gz --output-inconsistent HG002-HG003-HG004.hg001v1.0_mat_Y_EBV.element_500bp.deeptrio_1.6.glnexus_inconsistent.vcf.gz --Xphase --all-records
+
+#annotate and then merge all homopols and diTRs since element calls are most accurate in these. This command also only keeps sites where the error is phased to the maternal haplotype
+bedtools2.30.0/bin/multiIntersectBed -i stratifications/HG002.hap2@all/LowComplexity/HG002.hap2_SimpleRepeat_diTR_10to49_slop5.bed.gz stratifications/HG002.hap2@all/LowComplexity/HG002.hap2_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz stratifications/HG002.hap2@all/LowComplexity/HG002.hap2_SimpleRepeat_diTR_50to149_slop5.bed.gz stratifications/HG002.hap2@all/LowComplexity/HG002.hap2_SimpleRepeat_diTR_ge150_slop5.bed.gz | sort -k1,1 -k2,2n | bedtools2.30.0/bin/mergeBed -i stdin -d 5 > stratifications/HG002.hap2@all/LowComplexity/HG002.hap2_SimpleRepeat_diTRs_homopols_slop5.bed
+
+#select sites from element trio in homopolymers or diTRs with child GQ>20 and DP>20 and DP<double the mean coverage (100 in this case). This also excludes VDJ
+bedtools2.30.0/bin/subtractBed -a HG002-HG003-HG004.hg001v1.0_mat_Y_EBV.element_500bp.deeptrio_1.6.glnexus_phased.vcf.gz -b stratifications/HG002.hap2@all/OtherDifficult/HG002.hap2_VDJ.bed.gz -header | bedtools2.30.0/bin/intersectBed -a stdin -b stratifications/HG002.hap2@all/LowComplexity/HG002.hap2_SimpleRepeat_diTRs_homopols_slop5.bed -header | bcftools-1.17/bcftools filter -i 'FORMAT/GQ[0]>20  && FORMAT/DP[0]>20 && MAX(FORMAT/DP[0])<100' | awk '$1 ~ /^#/ ||  ($10 ~ /^.\|1/ || $10 ~ /^.\|2/ )' | sed 's/.\|1/1\|1/g;s/.\|2/2\|2/g' | bcftools-1.17/bcftools view -s HG002 --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v1.0.fasta | htslib-1.17/bgzip -c > HG002-HG003-HG004.hg001v1.0_mat_Y_EBV.element_500bp.deeptrio_1.6.glnexus_inhomopoldiTR.vcf.gz
+
+
+
+#find more confident edits that are indels 1-2bp in size. 
+gunzip -c HG002-HG003-HG004.hg001v1.0_mat_Y_EBV.element_500bp.deeptrio_1.6.glnexus_inhomopoldiTR.vcf.gz | awk '$1 ~ /^#/ || (length($4)+length($5)<5 && length($4)+length($5)>2)' | htslib-1.17/bgzip -c > HG002-HG003-HG004.hg001v1.0_mat_Y_EBV.element_500bp.deeptrio_1.6.glnexus_inhomopoldiTR_indel1to2bp.vcf.gz
+
+##do the same on paternal haplotype, except change ($10 ~ /^.\|1/ || $10 ~ /^.\|2/ )' | sed 's/.\|1/1\|1/g;s/.\|2/2\|2/g' to ($10 ~ /^1/ || $10 ~ /^2/ )' | sed 's/1/1\|1/g;s/2/2\|2/g' 
+
