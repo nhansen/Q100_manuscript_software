@@ -1,0 +1,1 @@
+Hayden Ji's software for annotating T2T-HG002v1.1's gene content with LiftOff is available at https://doi.org/10.5281/zenodo.16880402.

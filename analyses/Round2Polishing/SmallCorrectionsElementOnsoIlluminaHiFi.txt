@@ -1,0 +1,146 @@
+
+rtg-tools-3.12.1/rtg mendelian -t hg002v0.9.sdf -i hg002v0.9.mat.trio_merged.onso_element_illumina.vcf.gz --pedigree alltechs_v0.9.ped.txt --output-consistent hg002v0.9.mat.trio_merged.onso_element_illumina_phased.vcf.gz --output-inconsistent hg002v0.9.mat.trio_merged.onso_element_illumina_inconsistent.vcf.gz --Xphase --all-records
+
+bcftools-1.17/bcftools merge hg002v0.9.mat.trio_merged.onso_element_illumina_phased.vcf.gz hg002v0.9_hifi_revio.vcf.gz --force-samples > hg2matvelementonsoIllHiFiDVmergephased.vcf
+
+
+for j in {1..4}; do
+k=1
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+#select sites with HiFi to both haps support
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk "\$1 ~ /^#/ ||  (\$1${hg2} ~ /^.\|${j}/ && (\$22 ~ /^.\/${j}/ || \$22 ~ /^${j}\//))" | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_EleIns500 --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasedhifibothhaps.vcf.gz
+
+k=2
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<150" | awk "\$1 ~ /^#/ ||  (\$1${hg2} ~ /^.\|${j}/ && (\$22 ~ /^.\/${j}/ || \$22 ~ /^${j}\//))" | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_EleMerge --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_elemergehg2mat${j}phasedhifibothhaps.vcf.gz
+
+k=3
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk "\$1 ~ /^#/ ||  (\$1${hg2} ~ /^.\|${j}/ && (\$22 ~ /^.\/${j}/ || \$22 ~ /^${j}\//))" | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_I2x250_Ill --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_I2x250_Illhg2mat${j}phasedhifibothhaps.vcf.gz
+
+k=4
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk "\$1 ~ /^#/ ||  (\$1${hg2} ~ /^.\|${j}/ && (\$22 ~ /^.\/${j}/ || \$22 ~ /^${j}\//))" | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_Onso --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_Onsohg2mat${j}phasedhifibothhaps.vcf.gz
+
+
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasedhifibothhaps.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_elemergehg2mat${j}phasedhifibothhaps.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_I2x250_Illhg2mat${j}phasedhifibothhaps.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Onsohg2mat${j}phasedhifibothhaps.vcf.gz 
+
+bcftools-1.17/bcftools merge hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasedhifibothhaps.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_elemergehg2mat${j}phasedhifibothhaps.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_I2x250_Illhg2mat${j}phasedhifibothhaps.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_Onsohg2mat${j}phasedhifibothhaps.vcf.gz > hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat${j}phasedhifibothhaps.vcf
+
+done
+
+htslib-1.17/bgzip -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat1phasedhifibothhaps.vcf 
+htslib-1.17/bgzip -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat2phasedhifibothhaps.vcf 
+htslib-1.17/bgzip -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat3phasedhifibothhaps.vcf 
+
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat1phasedhifibothhaps.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat2phasedhifibothhaps.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat3phasedhifibothhaps.vcf.gz 
+
+bcftools-1.17/bcftools concat -a hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat1phasedhifibothhaps.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat2phasedhifibothhaps.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat3phasedhifibothhaps.vcf.gz  | awk '{FS=OFS="\t"} {if(!($1 ~ /^#/)) $7="PASS"; print $0}' > hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat1to3phasedhifibothhaps.vcf
+
+
+
+##select sites without HiFi to both haps support but 1bp indel in homopol
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i 'FORMAT/GQ[0]>20 && FORMAT/GQ[4]>20 && FORMAT/GQ[8]>20 && FORMAT/DP[0]>20 && FORMAT/DP[4]>20 && FORMAT/DP[8]>20 && MAX(FORMAT/DP[0])<100' | awk '$1 ~ /^#/ ||  ($10 ~ /^.\|1/ && !($22 ~ /^.\/1/ || $22 ~ /^1\//))' | sed 's/.\|1/1\|1/g' | bcftools-1.17/bcftools view -s HG002_EleIns500 --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i 'FORMAT/GQ[1]>20 && FORMAT/GQ[5]>20 && FORMAT/GQ[9]>20 && FORMAT/DP[1]>20 && FORMAT/DP[5]>20 && FORMAT/DP[9]>20 && MAX(FORMAT/DP[1])<150' | awk '$1 ~ /^#/ ||  ($11 ~ /^.\|1/ && !($22 ~ /^.\/1/ || $22 ~ /^1\//))' | sed 's/.\|1/1\|1/g' | bcftools-1.17/bcftools view -s HG002_EleMerge --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i 'FORMAT/GQ[2]>20 && FORMAT/GQ[6]>20 && FORMAT/GQ[10]>20 && FORMAT/DP[2]>20 && FORMAT/DP[6]>20 && FORMAT/DP[10]>20 && MAX(FORMAT/DP[2])<100' | awk '$1 ~ /^#/ ||  ($12 ~ /^.\|1/ && ($11 ~ /^.\|1/ || $11 ~ /^\./) && !($22 ~ /^.\/1/ || $22 ~ /^1\//))' | sed 's/.\|1/1\|1/g' | bcftools-1.17/bcftools view -s HG002_I2x250_Ill --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i 'FORMAT/GQ[3]>20 && FORMAT/GQ[7]>20 && FORMAT/GQ[11]>20 && FORMAT/DP[3]>20 && FORMAT/DP[7]>20 && FORMAT/DP[11]>20 && MAX(FORMAT/DP[3])<100' | awk '$1 ~ /^#/ ||  ($13 ~ /^.\|1/ && ($11 ~ /^.\|1/ || $11 ~ /^\./) && !($22 ~ /^.\/1/ || $22 ~ /^1\//))' | sed 's/.\|1/1\|1/g' | bcftools-1.17/bcftools view -s HG002_Onso --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+bcftools-1.17/bcftools merge hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz  hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_AllTechs_hg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_AllTechs_hg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+j=2
+k=1
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk '$1 ~ /^#/ ||  ($10 ~ /^.\|2/ && !($22 ~ /^.\/2/ || $22 ~ /^2\//))' | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_EleIns500 --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+k=2
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<150" | awk '$1 ~ /^#/ ||  ($11 ~ /^.\|2/ && !($22 ~ /^.\/2/ || $22 ~ /^2\//))' | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_EleMerge --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+k=3
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk '$1 ~ /^#/ ||  ($12 ~ /^.\|2/ && ($11 ~ /^.\|2/ || $11 ~ /^\./) && !($22 ~ /^.\/2/ || $22 ~ /^2\//))' | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_I2x250_Ill --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+k=4
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk '$1 ~ /^#/ ||  ($13 ~ /^.\|2/ && ($11 ~ /^.\|2/ || $11 ~ /^\./) && !($22 ~ /^.\/2/ || $22 ~ /^2\//))' | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_Onso --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+bcftools-1.17/bcftools merge hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz  hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_AllTechs_hg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+
+#select sites without HiFi to both haps support but 1bp indel in homopol
+j=3
+k=1
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk '$1 ~ /^#/ ||  ($10 ~ /^.\|3/ && !($22 ~ /^.\/3/ || $22 ~ /^3\//))' | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_EleIns500 --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+k=2
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<150" | awk '$1 ~ /^#/ ||  ($11 ~ /^.\|3/ && !($22 ~ /^.\/3/ || $22 ~ /^3\//))' | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_EleMerge --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+k=3
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk '$1 ~ /^#/ ||  ($12 ~ /^.\|3/ && ($11 ~ /^.\|3/ || $11 ~ /^\./) && !($22 ~ /^.\/3/ || $22 ~ /^3\//))' | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_I2x250_Ill --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+k=4
+hg2=$((k-1))
+hg3=$((k+3))
+hg4=$((k+7))
+bedtools2.30.0/bin/subtractBed -a hg2matvelementonsoIllHiFiDVmergephased.vcf -b IGH_IGL_IGK_v0.9mat.bed -header | bedtools2.30.0/bin/intersectBed  -a stdin -b HG002-maternal_AllHomopolymers_ge7bp_imperfectge11bp_slop5.bed.gz -header | bcftools-1.17/bcftools filter -i "FORMAT/GQ[${hg2}]>20 && FORMAT/GQ[${hg3}]>20 && FORMAT/GQ[${hg4}]>20 && FORMAT/DP[${hg2}]>20 && FORMAT/DP[${hg3}]>20 && FORMAT/DP[${hg4}]>20 && MAX(FORMAT/DP[${hg2}])<100" | awk '$1 ~ /^#/ ||  ($13 ~ /^.\|3/ && ($11 ~ /^.\|3/ || $11 ~ /^\./) && !($22 ~ /^.\/3/ || $22 ~ /^3\//))' | sed "s/.\|${j}/${j}\|${j}/g" | bcftools-1.17/bcftools view -s HG002_Onso --trim-alt-alleles | bcftools-1.17/bcftools norm -f hg002v0.9.fasta | awk '$1 ~ /^#/ || length($4)+length($5)==3' | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+bcftools-1.17/bcftools merge hg2matvelementonsoIllHiFiDVasmmatmerge_elem500hg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz  hg2matvelementonsoIllHiFiDVasmmatmerge_elemmergehg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_HG002_I2x250_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_Onso_Illhg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz  | htslib-1.17/bgzip -c > hg2matvelementonsoIllHiFiDVasmmatmerge_AllTechs_hg2mat${j}phasednothifibothhapsbut1bpindelinhomopol.vcf.gz
+
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat2phasednothifibothhapsbut1bpindelinhomopol.vcf.gz 
+htslib-1.17/tabix -f hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat3phasednothifibothhapsbut1bpindelinhomopol.vcf.gz 
+
+bcftools-1.17/bcftools concat -a hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat1phasednothifibothhapsbut1bpindelinhomopol.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat2phasednothifibothhapsbut1bpindelinhomopol.vcf.gz hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat3phasednothifibothhapsbut1bpindelinhomopol.vcf.gz | awk '{FS=OFS="\t"} {if(!($1 ~ /^#/)) $7="PASS"; print $0}' > hg2matvelementonsoIllHiFiDVasmmatmerge_Alltechs_hg2mat1to3phasednothifibothhapsbut1bpindelinhomopol.vcf 
+

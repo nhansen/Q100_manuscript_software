@@ -1,0 +1,56 @@
+export V9FASTA=v0.9.fasta
+export TELOFASTA=../assembly.v0.7_chrarms_ONTv14.fasta
+
+export PPATCHCOORDS=P_arm_patch_coords.txt
+export QPATCHCOORDS=Q_arm_patch_coords.txt
+
+export COORDFILE=v0.9.ONTv14.patch.coords.txt
+rm -f $COORDFILE
+export VCFFILE=v0.9.ONTv14.patch.vcf
+rm -f $VCFFILE
+
+for id in `awk -F"\t" '{print $6}' $PPATCHCOORDS`; do
+    export ID=$id
+    export CHROM=`echo $ID | sed 's/L_P/L/'`
+    export V9COORDS=`awk -F"\t" '$6==ENVIRON["ID"] {print "1\t"$4}' $PPATCHCOORDS`;
+    export PATCHCOORDS=`awk -F"\t" '$6==ENVIRON["ID"] {print "1\t"$9}' $PPATCHCOORDS`;
+
+    echo -e "$CHROM\t$V9COORDS\t$ID\t$PATCHCOORDS\t+" >> $COORDFILE
+
+    export REFSTART=`echo $V9COORDS | sed 's/ .*//'`
+    export REFEND=`echo $V9COORDS | sed 's/.* //'`
+    export REF=`samtools faidx $V9FASTA $CHROM:$REFSTART-$REFEND | grep -v '>' | tr -d '\n'`;
+    export TELOSTART=`echo $PATCHCOORDS | sed 's/ .*//'`
+    export TELOEND=`echo $PATCHCOORDS | sed 's/.* //'`
+    export ALT=`samtools faidx $TELOFASTA $ID:$TELOSTART-$TELOEND | grep -v '>' | tr -d '\n'`;
+    echo $REFSTART $REFEND $TELOSTART $TELOEND
+    export SHORTALLELES=`echo $REF $ALT | perl -lne '{($ref, $alt) = split /\s/, $_; while($ref && $alt && (substr($ref, -1) eq substr($alt, -1))) {chop $ref; chop $alt} print "$ref\t$alt"}'`
+    export SHORTREF=`echo $SHORTALLELES | awk '{print $1}'`
+    export SHORTALT=`echo $SHORTALLELES | awk '{print $2}'`
+    echo -e $CHROM"\t"$REFSTART"\t"$ID"\t"$SHORTREF"\t"$SHORTALT"\t0\tPASS\t.\tGT\t1/1" >> $VCFFILE;
+done
+    
+for id in `awk -F"\t" '{print $6}' $QPATCHCOORDS`; do
+    export ID=$id
+    export CHROM=`echo $ID | sed 's/L_Q/L/'`
+    export CHROMLEN=`awk -F"\t" '$1==ENVIRON["CHROM"] {print $2}' $V9FASTA.fai`
+    export V9COORDS=`awk -F"\t" '$6==ENVIRON["ID"] {print ENVIRON["CHROMLEN"]-$2+$3+1"\t"ENVIRON["CHROMLEN"]}' $QPATCHCOORDS`;
+    export PATCHCOORDS=`awk -F"\t" '$6==ENVIRON["ID"] {print 1"\t"$9}' $QPATCHCOORDS`;
+
+    echo -e "$CHROM\t$V9COORDS\t$ID\t$PATCHCOORDS\t-" >> $COORDFILE
+
+    export REFSTART=`echo $V9COORDS | sed 's/ .*//'`
+    export REFEND=`echo $V9COORDS | sed 's/.* //'`
+    export REF=`samtools faidx $V9FASTA $CHROM:$REFSTART-$REFEND | grep -v '>' | tr -d '\n'`;
+    export TELOSTART=`echo $PATCHCOORDS | sed 's/ .*//'`
+    export TELOEND=`echo $PATCHCOORDS | sed 's/.* //'`
+    export ALT=`samtools faidx $TELOFASTA $ID:$TELOSTART-$TELOEND | grep -v '>' | tr -d '\n' | tr ACGTacgt TGCAtgca | rev`;
+    echo $REFSTART $REFEND $TELOSTART $TELOEND
+    export SHORTPOSIDALLELES=`echo $REFSTART $ID $REF $ALT | perl -lne '{($pos, $varid, $ref, $alt) = split /\s/, $_; while($ref && $alt && (substr($ref, 0, 1) eq substr($alt, 0, 1))) {$lastchar=substr($ref, 0, 1); $ref =~ s/^.//; $alt =~ s/^.//; $pos++} $pos--; print "$pos\t$varid\t$lastchar$ref\t$lastchar$alt"}'`
+    export SHORTPOS=`echo $SHORTPOSIDALLELES | awk '{print $1}'`
+    export SHORTID=`echo $SHORTPOSIDALLELES | awk '{print $2}'`
+    export SHORTREF=`echo $SHORTPOSIDALLELES | awk '{print $3}'`
+    export SHORTALT=`echo $SHORTPOSIDALLELES | awk '{print $4}'`
+    echo -e $CHROM"\t"$SHORTPOS"\t"$SHORTID"\t"$SHORTREF"\t"$SHORTALT"\t0\tPASS\t.\tGT\t1/1" >> $VCFFILE;
+done
+
