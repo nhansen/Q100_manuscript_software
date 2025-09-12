@@ -1,0 +1,90 @@
+After unzipping the corresponding WDL is located in the relative path “wdls/workflows/flagger_end_to_end.wdl” :
+https://github.com/mobinasri/flagger/archive/refs/tags/v1.1.0.zip 
+
+We used Toil, an open-source software for running scientific workflows (Vivian 2017 PMID: 28398314), to run Flagger on the SLURM-based Phoenix cluster at UC Santa Cruz (UCSC). 
+
+Here are the commands we used for generating the input json files (one json per sequencing platform):
+
+# Go to working directory
+cd ${WORKING_DIR}
+
+# Save WDL path and name in bash variables
+WDL_FILENAME=$(basename ${PATH_TO_FLAGGER_WDL})
+WDL_NAME=${PATH_TO_FLAGGER_WDL%%.wdl}
+
+
+# Make a folder for saving files related to run e.g. input and output jsons
+cd ${WORKING_DIR}
+mkdir -p runs_toil_slurm
+cd runs_toil_slurm
+
+# Make a directory for saving input json files
+mkdir -p ${WDL_NAME}_input_jsons
+cd ${WDL_NAME}_input_jsons
+
+# Get the script for creating input json files.
+wget https://raw.githubusercontent.com/human-pangenomics/hprc_intermediate_assembly/1f61ff0043442d8350a282ef3533def588bee8dc/hpc/launch_from_table.py
+
+python3 ${PATH_TO_LAUNCH_FROM_TABLE_PY}\
+     --data_table ${WORKING_DIR}/data_table.csv \
+     --field_mapping ${WORKING_DIR}/input_mapping.csv \
+     --workflow_name ${WDL_NAME}
+
+The csv files for generating input json files can be downloaded from these links:
+https://raw.githubusercontent.com/mobinasri/research_notes/refs/heads/main/Flagger_HG002_T2T/Run_Flagger_for_HG002_v1.0.1/files/v1.0.1/flagger_v0.4.0_runs/data_table.csv 
+
+https://raw.githubusercontent.com/mobinasri/research_notes/refs/heads/main/Flagger_HG002_T2T/Run_Flagger_for_HG002_v1.0.1/files/v1.0.1/flagger_v0.4.0_runs/input_mapping.csv 
+
+The file paths in data_table.csv should be updated to match the local paths in the system used for execution.   
+
+After generating the input json files we ran the commands below to run WDL on the UCSC cluster using Toil. It will create and queue one job per sequencing data type.
+
+# Go to working directory
+cd ${WORKING_DIR}
+
+# Get the bash script for running WDLs on Slurm using Toil
+wget https://raw.githubusercontent.com/human-pangenomics/hprc_intermediate_assembly/b81bbb9540eaf5632a53faba43be71a0974f14f6/hpc/toil_sbatch_single_machine.sh
+
+# Set bash variables for sbatch
+TIME_LIMIT="70:00:00"
+
+# Partition should be modified based on the available partitions on the server
+PARTITION="long"
+
+# Go to the execution directory
+mkdir -p ${WDL_NAME}_logs
+
+# Run jobs arrays
+sbatch      --job-name=${WDL_NAME}_${USERNAME} \
+            --cpus-per-task=64 \
+            --mem=256G \
+            --mail-user=${EMAIL} \
+            --output=${WDL_NAME}_logs/${WDL_NAME}_%A_%a.log \
+            --array=1-3%3  \
+            --time=${TIME_LIMIT} \
+            --partition=${PARTITION} \
+            ${WORKING_DIR}/toil_sbatch_single_machine.sh \
+            --wdl ${WDL_PATH} \
+            --sample_csv  ${WORKING_DIR}/data_table.csv \
+            --input_json_path ${WORKING_DIR}/${WDL_NAME}_input_jsons/\${SAMPLE_ID}_${WDL_NAME}.json
+
+The output Flagger bed files are available here separated by sequencing platform:
+https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=submissions/278062c0-5e2e-11ed-bbdb-0a13c5208311--T2T_HG002_Evaluation/T2T_HG002_v1.0.1/Flagger_v0.4.0/
+
+Since each sequencing data has platform-specific limitations and coverage gaps, we looked at the regions marked by either 2 or 3 platforms. The intersected bed files that we used for further investigations in assembly-v1.0.1 are available here:
+https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=submissions/278062c0-5e2e-11ed-bbdb-0a13c5208311--T2T_HG002_Evaluation/T2T_HG002_v1.0.1/Flagger_v0.4.0/HG002_v1.0.1_Intersection/ 
+
+BAM files: 
+
+# HiFi Revio ~50x per haploid
+https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/HG002/assemblies/polishing/HG002/v1.0/mapping/hifi_revio_3cell/hg002v1.0_hifi_revio_3cells.pri.bam 
+https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/HG002/assemblies/polishing/HG002/v1.0/mapping/hifi_revio_3cell/hg002v1.0_hifi_revio_3cells.pri.bam.bai 
+
+# ONT R10 UL ~60x per haploid
+https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/HG002/assemblies/polishing/HG002/v1.0/mapping/ont_r10_ul_dorado/hg002v1.0_ont_r10_ul_dorado.pri.bam 
+https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/HG002/assemblies/polishing/HG002/v1.0/mapping/ont_r10_ul_dorado/hg002v1.0_ont_r10_ul_dorado.pri.bam.bai 
+
+# ONT R10 duplex ~40x per haploid
+https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/HG002/assemblies/polishing/HG002/v1.0/mapping/ont_r10_duplex/hg002v1.0_ont_r10_duplex.pri.bam 
+https://s3-us-west-2.amazonaws.com/human-pangenomics/T2T/HG002/assemblies/polishing/HG002/v1.0/mapping/ont_r10_duplex/hg002v1.0_ont_r10_duplex.pri.bam.bai 
+

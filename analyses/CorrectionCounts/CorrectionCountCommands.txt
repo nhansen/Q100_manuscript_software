@@ -1,0 +1,53 @@
+for file in `ls *allelecorrec*`; do echo $file; awk 'length($1)==length($2) \
+&& length($2)==1 {sum += 1} END {print sum}' $file; done
+hg002v0.7_to_hg002v0.9.allelecorrections.txt
+2574
+hg002v0.9_to_hg002v1.0.1.allelecorrections.txt
+2555
+hg002v1.0.1_to_hg002v1.1.allelecorrections.txt
+291
+
+# small insertions:
+for file in `ls *allelecorrec*`; do echo $file; awk 'length($2)-length($1) > 0 \
+&& length($2)-length($1)<=50 {sum += 1} END {print sum}' $file; done
+hg002v0.7_to_hg002v0.9.allelecorrections.txt
+3441
+hg002v0.9_to_hg002v1.0.1.allelecorrections.txt
+1300
+hg002v1.0.1_to_hg002v1.1.allelecorrections.txt
+887
+# total
+awk 'length($2)-length($1) > 0 && length($2)-length($1)<=50 \
+{sum += 1} END {print sum}' *allelecorr*
+5628
+
+# small deletions
+for file in `ls *allelecorrec*`; do echo $file; awk 'length($2)-length($1) < 0 \
+&& length($2)-length($1)>=-50 {sum += 1} END {print sum}' $file; done
+hg002v0.7_to_hg002v0.9.allelecorrections.txt
+21375
+hg002v0.9_to_hg002v1.0.1.allelecorrections.txt
+2583
+hg002v1.0.1_to_hg002v1.1.allelecorrections.txt
+2821
+# total
+awk 'length($2)-length($1) < 0 && length($2)-length($1)>=-50 {sum += 1} \
+END {print sum}' *allelecorr*
+26779
+
+# total large patches by round:
+for file in `ls *allelecorrec*`; do echo $file; awk 'length($2)-length($1) <-50 \
+|| length($2)-length($1)>50 || (length($1)==length($2) && length($1)>1) \
+{total+= 1; sum += length($1)} END {print sum, total}' $file; done
+hg002v0.7_to_hg002v0.9.allelecorrections.txt
+1112172 66
+hg002v0.9_to_hg002v1.0.1.allelecorrections.txt
+13045719 130
+hg002v1.0.1_to_hg002v1.1.allelecorrections.txt
+24913 14
+
+# total large patches:
+awk 'length($2)-length($1) <-50 || length($2)-length($1)>50 \
+|| (length($1)==length($2) && length($1)>1) {total+= 1; sum += length($1)} \
+END {print sum, total}' *allelecorr*
+14182804 210
