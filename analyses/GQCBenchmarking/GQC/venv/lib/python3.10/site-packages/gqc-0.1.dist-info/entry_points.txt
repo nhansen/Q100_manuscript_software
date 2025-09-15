@@ -1,0 +1,6 @@
+[console_scripts]
+GQC = GQC.bench:main
+assemblybench = GQC.bench:main
+assemblycompare = GQC.compare:main
+gethets = GQC.gethets:main
+readbench = GQC.readbench:main

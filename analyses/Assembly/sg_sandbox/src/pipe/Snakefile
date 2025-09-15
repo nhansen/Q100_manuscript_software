@@ -1,0 +1,73 @@
+import tempfile
+import os
+import re
+import glob
+import time
+import math
+
+#basic variable setup
+#configfile: 'config.yaml'
+
+CANU_BIN=config['CANU_BIN']
+ASSEMBLY=config['ASSEMBLY']
+REFERENCE=config.get('REFERENCE_PATH','')
+
+print("CANU_BIN:", CANU_BIN)
+print("ASSEMBLY:", ASSEMBLY)
+print("REFERENCE:", REFERENCE)
+
+localrules: all
+
+rule all:
+    input:
+        'simplified_chr_analysis/finish.flag' if len(REFERENCE) > 0 else 'simplified.gfa'
+
+rule pipe:
+    input:
+        ASSEMBLY + '/unitigging/4-unitigger/asm.best.edges'
+    output:
+        'simplified.gfa',
+        'simplified.noseq.gfa',
+        'simplified.nodes.fasta'
+    threads:
+        12
+    log:
+        'pipe.log'
+    params:
+        min_ovl=config['MIN_OVERLAP'],
+        ovl_er=config['OVERLAP_ERATE']
+    run:
+        exports=[]
+
+        for name in config:
+            if name.startswith('S_'):
+                exports.append((name, config.get(name)))
+        exports.append(('WEAK_OVERLAP_THRESHOLDS', ' '.join([str(i).replace(' ', ':') for i in config.get('WEAK_OVERLAP_THRESHOLDS')])))
+        exports.append(('NO_DEADEND_OVERLAP_THRESHOLDS', ' '.join([str(i).replace(' ', ':') for i in config.get('NO_DEADEND_OVERLAP_THRESHOLDS')])))
+
+        shell('\n'.join(['export %s="%s"' % (var, val) for var, val in exports]) + '\n' +
+              '\n'.join(['echo %s: \\"$%s\\" &>> {log}' % (var, var) for var, _ in exports]) +
+              '\n$SCRIPT_PATH/../pipe/pipe.sh {CANU_BIN} {ASSEMBLY} {params.min_ovl} {params.ovl_er} &>> {log}')
+
+rule mashmap:
+    input:
+        '{path}.nodes.fasta'
+    output:
+        '{path}.nodes.hg38.out'
+    threads:
+        16
+    log:
+        '{path}.mashmap.log'
+    shell:
+        '$SCRIPT_PATH/mashmap.sh {input} {REFERENCE}.fasta {output} &> {log}'
+
+rule chr_analysis:
+    input:
+        mashmap='{path}.nodes.hg38.out',
+        gfa='{path}.noseq.gfa'
+    output:
+        touch('{path}_chr_analysis/finish.flag')
+    log:
+        '{path}_chr_analysis.log'
+    shell:
+        '$SCRIPT_PATH/chr_analysis.sh {wildcards.path}_chr_analysis {input.mashmap} {input.gfa} {REFERENCE}.colors {REFERENCE}.bed &> {log}'

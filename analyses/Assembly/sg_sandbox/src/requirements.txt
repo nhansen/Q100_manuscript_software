@@ -1,0 +1,5 @@
+python=3
+snakemake
+biopython
+parasail-python
+pysam

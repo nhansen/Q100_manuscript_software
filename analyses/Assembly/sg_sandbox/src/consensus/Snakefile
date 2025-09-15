@@ -1,0 +1,142 @@
+import tempfile
+import os
+import re
+import glob
+import time
+import math
+
+CANU_BIN=config['CANU_BIN']
+SEQ_STORE=config['SEQ_STORE']
+OVL_STORE=config['OVL_STORE']
+SG_ROOT=config['SG_ROOT']
+RANDOM_SEED=config['RANDOM_SEED']
+
+CNS_PRE='cns'
+
+rule all:
+    input:
+        'joined.fasta',
+        'cns.renamed.info'
+
+rule joined:
+    input:
+        utgs=SG_ROOT + '/simplified.nodes.fasta',
+        utg_layout='layout.txt',
+        gfa=SG_ROOT + '/simplified.noseq.gfa'
+    output:
+        'joined.fasta'
+    log:
+        'join.log'
+    shell:
+        '$SCRIPT_PATH/../join_segments.py {input.utgs} {input.utg_layout} {input.gfa} {output} &> {log}'
+
+rule backbone_layout:
+    input:
+        utg_layout='layout.txt',
+        utg_composition=SG_ROOT + '/resolved_mapping.txt'
+    output:
+        'backbone_layout.txt',
+        'contig_names.txt'
+    log:
+        'backbone.log'
+    shell:
+        '''
+        manual=edited_backbone_layout.txt
+        if [ -f $manual ] ; then
+            echo "Copying from $manual" > {log}
+            cp $manual backbone_layout.txt
+        else
+            $SCRIPT_PATH/resolve_layouts.sh {input.utg_layout} {input.utg_composition} backbone_layout.txt &> {log}
+        fi
+        awk '{{print $1}}' backbone_layout.txt > contig_names.txt
+        '''
+
+rule layout_reads:
+    input:
+        'backbone_layout.txt'
+    output:
+        touch('layout.done')
+    log:
+        'layout_reads.log'
+    params:
+        #seed=1, #changed for chr10 (also later for chr18)
+        #FIXME maybe remove?
+        size=200000000
+    shell:
+      '{CANU_BIN}/layoutReads -S {SEQ_STORE} -O {OVL_STORE} -eg 0.00001 -eM 0.00001 -R {input} -seed {RANDOM_SEED} -gs {params.size} -o {CNS_PRE} &> {log}'
+
+#  Magic values
+#    partitionSize    - make partitions this big, relative to the biggest contig
+#                       0.10 - each big contig gets its own partition
+#    partitionScaling - expect contigs to expand by this much due to homopoly compression
+#                       1.50 - 50% expansion of contig length, affects memory estimate
+#    partitionTigs    - put this many reads (as fraction of total) in a partition
+#                       0.01 - puts small contigs into many partitions
+
+checkpoint partition:
+    input:
+        'layout.done'
+    output:
+        touch('partitioning.done')
+    log:
+        'partitioning.log'
+    shell:
+        '{CANU_BIN}/utgcns -V -S {SEQ_STORE} -T {CNS_PRE}.ctgStore 1 -partition 0.10 1.50 0.01 &> {log}'
+
+#Add "-V -V -V " for debug info
+rule consensus:
+    input:
+        'partitioning.done'
+    output:
+        CNS_PRE + '-{part}.cns.fasta'
+    log:
+        CNS_PRE + '-{part}.cns.log'
+    threads: 8
+    params:
+        ovl_len=2000,
+        #FIXME parameterize
+        #error_rate=0.08
+        error_rate=0.05
+    shell:
+      '{CANU_BIN}/utgcns -V -V -V \
+        -R {CNS_PRE}.ctgStore/partition.{wildcards.part} \
+        -T {CNS_PRE}.ctgStore 1 \
+        -P {wildcards.part} \
+        -O {CNS_PRE}-{wildcards.part}.cns \
+        -A {output} \
+        -maxcoverage 50 \
+        -l {params.ovl_len} \
+        -e {params.error_rate} \
+        -threads {threads} &> {log}'
+
+def aggregate_input(wildcards):
+    checkpoint_output = checkpoints.partition.get().output[0]
+    parts, = glob_wildcards(CNS_PRE + '.ctgStore/partition.{part}')
+    return expand(CNS_PRE + '-{pp}.cns.fasta', pp=parts)
+
+rule collect:
+    input: aggregate_input
+    output:
+        'cns.result.fasta'
+    shell:
+        'cat {input} > {output}'
+
+rule rename:
+    input:
+        consensus='cns.result.fasta',
+        names='contig_names.txt'
+    output:
+        'cns.renamed.fasta'
+    shell:
+        '''
+        awk '{{print NR,$0}}' {input.names} > cns_name_map.txt
+        $SCRIPT_PATH/../consensus/rename_reads.py {input.consensus} cns_name_map.txt {output}
+        '''
+
+rule info:
+    input:
+        'cns.renamed.fasta'
+    output:
+        'cns.renamed.info'
+    shell:
+        '$SCRIPT_PATH/../contig_processing/contig_info.py {input} > {output}'
