@@ -49,6 +49,15 @@ Nancy F. Hansen1, Nathan Dwarshuis2, Hyun Joo Ji3,4, Arang Rhie1, Hailey Loucks5
 
 ### Repository contents
 This repository contains code, analysis details, and descriptions and copies of github repositories used in the analyses for the manuscript "A complete diploid human genome benchmark for personalized genomics" by Hansen et al. A release of the repository will be archived and cited when the manuscript is submitted.
+
+In addition to the software and methods descriptions contained in this archive, several other archived repositories contain software used in the manuscript's analyses:
+* hg002-q100-annotation Hyoon Joo Ji (2025) DOI: 10.5281/zenodo.16880403
+* Nancy F. Hansen. (2025). nhansen/github_issues: Release v0.1 software for managing github issues (v0.1). DOI: 10.5281/zenodo.15491811
+* HMM-Flagger Mobin Asri and Mark Diekhans (2025). DOI: 10.5281/zenodo.17101707
+* CytoBandLiftover Nicolas Altemose (2025) DOI: 10.5281/zenodo.17089359
+* Mitchell Robert Vollger, & Gert Hulselmans. (2025). mrvollger/rustybam: v0.1.34 (v0.1.34). DOI:10.5281/zenodo.15580393
+* Nancy F. Hansen, & Arang Rhie. (2025). marbl/HG002-issues: HG002-issues as of Sep 11 2025 (v1.0). DOI:10.5281/zenodo.17100412
+
 ### Acknowledgements
 This work was supported, in part, by the Intramural Research Program of the US National Human Genome Research Institute, National Institutes of Health (NFH, SK, AR, DA, JK, BDP, SJS, APS, and AMP). The contributions of NIH authors are considered Works of the United States Government. The findings and conclusions presented in this paper are those of the authors and do not necessarily reflect the views of the NIH or the U.S. Department of Health and Human Services. This work is also supported, in part, by NIST Intramural Funding (ND, NDO, JW, and JMZ). Certain commercial equipment, instruments, or materials are identified to specify adequately experimental conditions or reported results. Such identification does not imply recommendation or endorsement by the National Institute of Standards and Technology, nor does it imply that the equipment, instruments, or materials identified are necessarily the best available for the purpose. Several authors are supported by NIH grants R01-HG006677 (to HJJ), 5R01HG010169 (to EEE), R00GM147352 (to GAL), 2T32GM007454, 1K99GM155552, and  1U01HG013744 (to MRV), R01-HG006677 and R35-GM156470 (to K-HC), U24HG010263 (to AD), UM1DA058229 (to LFP), R01-HG006677 and R35-GM130151 (to SLZ), 1UG3NS132105 and 1U01HG011758 (to FJS), U24HG010263 (to MCS), 1DP5OD029630, UM1DA058220, and 1U01HG013744 (to ABS) as well as USDA NIFA 2023-67015-39261 (to JK and RDS) and HATCH MO HAAS0001 (to RDS). NA is a Chan Zuckerberg Biohub Investigator and is supported by an HHMI Hanna H. Gray Fellowship and a Pew Biomedical Scholar Award. RJO is funded by the John and Donna Krinicki Endowment and by the Colossal Foundation. EEE is an investigator of the Howard Hughes Medical Institute. This work utilized the computational resources of the NIH HPC Biowulf cluster (http://hpc.nih.gov).
 
